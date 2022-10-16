@@ -39,9 +39,10 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
     }
 
     @Override
-    public boolean checkLoginDuplicate(String login) {
+    public boolean checkLoginDuplicate(String id, String login) {
         QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
         wrapper.select("id");
+        wrapper.ne("id", id);
         wrapper.eq("login", login);
         EmployeeEntity one = getOne(wrapper);
         return one != null;

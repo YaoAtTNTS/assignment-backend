@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.xy.assignment.entity.EmployeeEntity;
 import com.xy.assignment.service.impl.EmployeeServiceImpl;
 import com.xy.assignment.utils.JsonUtils;
+import com.xy.assignment.validator.ValidatorUtils;
+import com.xy.assignment.validator.group.AddGroup;
+import com.xy.assignment.validator.group.UpdateGroup;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +65,10 @@ public class EmployeeController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.POST)
     public ResponseEntity<Object> save(@RequestBody EmployeeEntity employee) {
+        boolean validate = ValidatorUtils.validateEntity(employee, AddGroup.class);
+        if (!validate) {
+            return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Invalid employee format."));
+        }
         boolean save = employeeService.save(employee);
         if (save) {
             return ResponseEntity.ok().body(JsonUtils.toJsonString("result", "Success."));
@@ -71,6 +78,14 @@ public class EmployeeController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
     public ResponseEntity<Object> update(@RequestBody EmployeeEntity employee) {
+        boolean validate = ValidatorUtils.validateEntity(employee, UpdateGroup.class);
+        if (!validate) {
+            return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Invalid employee format."));
+        }
+        boolean duplicate = employeeService.checkLoginDuplicate(employee.getId(), employee.getLogin());
+        if (duplicate) {
+            return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Duplicate Login."));
+        }
         boolean update = employeeService.updateById(employee);
         if (update) {
             return ResponseEntity.ok().body(JsonUtils.toJsonString("result", "Success."));
