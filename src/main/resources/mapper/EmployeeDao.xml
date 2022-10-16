@@ -4,7 +4,6 @@
 <mapper>
     <resultMap id="employeeMap" type="com.xy.assignment.entity.EmployeeEntity">
         <result property="id" column="id"/>
-        <result property="eid" column="eid"/>
         <result property="login" column="login"/>
         <result property="name" column="name"/>
         <result property="salary" column="salary"/>

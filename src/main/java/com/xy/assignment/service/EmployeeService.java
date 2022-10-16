@@ -18,9 +18,5 @@ import java.util.Map;
 public interface EmployeeService extends IService<EmployeeEntity> {
     List<EmployeeEntity> queryAll(Map<String, Object> params);
 
-    EmployeeEntity queryByEId(String id);
-
-    boolean updateByEId(EmployeeEntity employee);
-
-    boolean deleteByEId(String id);
+    boolean checkLoginDuplicate(String login);
 }

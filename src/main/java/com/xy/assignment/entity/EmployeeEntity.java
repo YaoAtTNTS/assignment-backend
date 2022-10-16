@@ -3,6 +3,7 @@ package com.xy.assignment.entity;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -16,16 +17,13 @@ import java.io.Serializable;
  */
 
 @Data
+@AllArgsConstructor
 @TableName("employee")
 public class EmployeeEntity implements Serializable {
     private static final long serialVersionID = 1L;
 
     @TableId
-    @JsonProperty("aid")
-    private Integer id;
-
-    @JsonProperty("id")
-    private String eid;
+    private String id;
 
     private String login;
 
@@ -33,10 +31,4 @@ public class EmployeeEntity implements Serializable {
 
     private Double salary;
 
-    public EmployeeEntity(String eid, String login, String name, Double salary) {
-        this.eid = eid;
-        this.login = login;
-        this.name = name;
-        this.salary = salary;
-    }
 }

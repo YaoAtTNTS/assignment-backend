@@ -6,6 +6,7 @@ import com.xy.assignment.dao.EmployeeDao;
 import com.xy.assignment.entity.EmployeeEntity;
 import com.xy.assignment.service.EmployeeService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -28,9 +29,6 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
         wrapper.le("salary", params.get("minSalary"));
         String sort = params.get("sort").toString();
         String sortField = sort.substring(1);
-        if (sortField.equals("id")) {
-            sortField = "eid";
-        }
         if (sort.startsWith("+")) {
             wrapper.orderByAsc(sortField);
         } else {
@@ -41,24 +39,48 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
     }
 
     @Override
-    public EmployeeEntity queryByEId(String id) {
+    public boolean checkLoginDuplicate(String login) {
         QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
-        wrapper.eq("eid", id);
-        return getOne(wrapper);
+        wrapper.select("id");
+        wrapper.eq("login", login);
+        EmployeeEntity one = getOne(wrapper);
+        return one != null;
     }
 
-    @Override
-    public boolean updateByEId(EmployeeEntity employee) {
-        QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
-        wrapper.eq("eid", employee.getEid());
-        return update(employee, wrapper);
+    @Transactional(
+        rollbackFor = {Exception.class}
+    )
+    public int saveOrUpdateBatchByEId(List<EmployeeEntity> employees) {
+        int count = 0;
+        for (EmployeeEntity employee : employees) {
+            try {
+                count += saveOrUpdateCountNew(employee);
+            } catch (Exception e) {
+                if (e.getMessage().equals("Update failed")) {
+                    return -1;
+                } else {
+                    return -2;
+                }
+            }
+        }
+        return count;
     }
 
-    @Override
-    public boolean deleteByEId(String id) {
-        QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
-        wrapper.eq("eid", id);
-        return remove(wrapper);
+    private int saveOrUpdateCountNew(EmployeeEntity employee) throws Exception {
+        EmployeeEntity one = this.getById(employee.getId());
+        if (one != null) {
+            boolean update = updateById(employee);
+            if (!update) {
+                throw new Exception("Update failed");
+            }
+            return 0;
+        } else {
+            boolean save = save(employee);
+            if (!save) {
+                throw new Exception("Save failed");
+            }
+            return 1;
+        }
     }
 
 }
