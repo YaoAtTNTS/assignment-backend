@@ -25,8 +25,8 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
     @Override
     public List<EmployeeEntity> queryAll(Map<String, Object> params) {
         QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
-        wrapper.ge("salary", params.get("maxSalary"));
-        wrapper.le("salary", params.get("minSalary"));
+        wrapper.le("salary", params.get("maxSalary"));
+        wrapper.ge("salary", params.get("minSalary"));
         String sort = params.get("sort").toString();
         String sortField = sort.substring(1);
         if (sort.startsWith("+")) {

@@ -1,6 +1,7 @@
 package com.xy.assignment.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.xy.assignment.entity.EmployeeEntity;
 import com.xy.assignment.service.impl.EmployeeServiceImpl;
 import com.xy.assignment.utils.JsonUtils;
@@ -58,13 +59,18 @@ public class EmployeeController {
     public ResponseEntity<Object> info(@PathVariable("id") String id) {
         if (id != null && !id.isEmpty()) {
             EmployeeEntity employee = employeeService.getById(id);
-            return ResponseEntity.ok().body(JsonUtils.toJsonString("result", employee));
+            if (employee != null) {
+                return ResponseEntity.ok().body(JsonUtils.toJsonString("result", employee));
+            } else {
+                return ResponseEntity.badRequest().body("No employee matched.");
+            }
         }
         return ResponseEntity.badRequest().body("Invalid id");
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.POST)
-    public ResponseEntity<Object> save(@RequestBody EmployeeEntity employee) {
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public ResponseEntity<Object> save(@RequestBody String json) {
+        EmployeeEntity employee = JSONObject.parseObject(json, EmployeeEntity.class);
         boolean validate = ValidatorUtils.validateEntity(employee, AddGroup.class);
         if (!validate) {
             return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Invalid employee format."));
@@ -76,8 +82,9 @@ public class EmployeeController {
         return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Failed"));
     }
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.PATCH)
-    public ResponseEntity<Object> update(@RequestBody EmployeeEntity employee) {
+    @RequestMapping(value = "", method = RequestMethod.PATCH)
+    public ResponseEntity<Object> update(@RequestBody String json) {
+        EmployeeEntity employee = JSONObject.parseObject(json, EmployeeEntity.class);
         boolean validate = ValidatorUtils.validateEntity(employee, UpdateGroup.class);
         if (!validate) {
             return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Invalid employee format."));

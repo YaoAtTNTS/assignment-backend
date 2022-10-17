@@ -6,6 +6,7 @@ import com.xy.assignment.validator.group.AddGroup;
 import com.xy.assignment.validator.group.UpdateGroup;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
@@ -21,6 +22,7 @@ import java.io.Serializable;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @TableName("employee")
 public class EmployeeEntity implements Serializable {
     private static final long serialVersionID = 1L;
