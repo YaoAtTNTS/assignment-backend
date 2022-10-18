@@ -13,8 +13,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -35,9 +33,10 @@ public class FileUploadController {
     @Resource
     private EmployeeServiceImpl employeeService;
 
+    private final Lock lock = new ReentrantLock();
+
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public ResponseEntity<String> upload(MultipartFile file) throws Exception {
-        Lock lock = new ReentrantLock();
         if (lock.tryLock()) {
             String tempDir;
 
@@ -46,22 +45,20 @@ public class FileUploadController {
             } else {
                 tempDir = "/tmp/xiong/";
             }
-
             String filename = file.getOriginalFilename();
             String tempPath = tempDir + filename + UUID.randomUUID();
             File dir = new File(tempPath);
             String result = null;
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
             try {
                 file.transferTo(dir);
                 result = readCSVData(tempPath);
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                lock.unlock();
+                dir.deleteOnExit();
             }
-            lock.unlock();
-            dir.delete();
+
             if (result == null) {
                 return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Unknown error."));
             }
@@ -75,7 +72,7 @@ public class FileUploadController {
 
     }
 
-    private String readCSVData (String tempPath) throws Exception {
+    public String readCSVData (String tempPath) throws Exception {
         FileReader reader = new FileReader(tempPath);
         CSVReader csvReader = new CSVReader(reader);
         csvReader.skip(1);
@@ -86,16 +83,21 @@ public class FileUploadController {
         int rowNo = 1;
         while ((nextRow = csvReader.readNext()) != null) {
             rowNo++;
-            if (nextRow.length > 4) {
-                List<String> nextRowStrings = Arrays.asList(nextRow);
-                while(nextRowStrings.remove(""));
-                if (nextRowStrings.size() == 4) {
-                    continue;
-                }
-                return "Row " + rowNo + " has too many columns.";
+            if (nextRow.length < 4) {
+                return "Row 1 " + " has too few columns.";
             }
-            if (nextRow[0].isEmpty() || nextRow[1].isEmpty() || nextRow[2].isEmpty() || nextRow[3].isEmpty()) {
-                return "Row " + rowNo + " has too few columns.";
+            for (int i = 0; i < 4; i++) {
+                if (nextRow[i].isEmpty()) {
+                    return "Row " + rowNo + " has too few columns.";
+                }
+            }
+            if (nextRow.length > 4) {
+                for (int i = 4; i < nextRow.length; i++) {
+                    if (!nextRow[i].isEmpty()) {
+                        return "Row " + rowNo + " has too many columns.";
+                    }
+                }
+                continue;
             }
             if (nextRow[0].startsWith("#")) {
                 continue;
@@ -113,16 +115,15 @@ public class FileUploadController {
                 return "Row " + rowNo + " has duplicate logins with an existing ID in the database.";
             }
             loginList.add(nextRow[1]);
-            if (isPositiveDouble(nextRow[3])) {
+            if (!isPositiveDouble(nextRow[3])) {
                 return "Invalid salary in Row " + rowNo;
             }
-            System.out.println("Id: " + nextRow[0] + ", Name: " + nextRow[1] + ", Login: " + nextRow[2] + ", Salary: " + nextRow[3]);
             employeeList.add(new EmployeeEntity(nextRow[0], nextRow[1], nextRow[2], Double.parseDouble(nextRow[3])));
         }
-        if (rowNo == 1) {
+        if (rowNo <= 1) {
             return "Empty file";
         }
-        int newRecords = employeeService.saveOrUpdateBatchByEId(employeeList);
+        int newRecords = employeeService.saveOrUpdateBatchById(employeeList);
         if (newRecords == -1) {
             return "Duplicate logins";
         }

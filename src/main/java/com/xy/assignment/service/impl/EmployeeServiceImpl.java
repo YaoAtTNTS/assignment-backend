@@ -23,7 +23,7 @@ import java.util.Map;
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity> implements EmployeeService {
 
     @Override
-    public List<EmployeeEntity> queryAll(Map<String, Object> params) {
+    public List<EmployeeEntity> queryAll(Map<String, String> params) {
         QueryWrapper<EmployeeEntity> wrapper = new QueryWrapper<>();
         wrapper.le("salary", params.get("maxSalary"));
         wrapper.ge("salary", params.get("minSalary"));
@@ -34,7 +34,6 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
         } else {
             wrapper.orderByDesc(sortField);
         }
-        wrapper.last("limit " + params.get("limit") + " offset " + params.get("offset"));
         return list(wrapper);
     }
 
@@ -51,7 +50,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
     @Transactional(
         rollbackFor = {Exception.class}
     )
-    public int saveOrUpdateBatchByEId(List<EmployeeEntity> employees) {
+    public int saveOrUpdateBatchById(List<EmployeeEntity> employees) {
         int count = 0;
         for (EmployeeEntity employee : employees) {
             try {
@@ -67,7 +66,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeDao, EmployeeEntity
         return count;
     }
 
-    private int saveOrUpdateCountNew(EmployeeEntity employee) throws Exception {
+    public int saveOrUpdateCountNew(EmployeeEntity employee) throws Exception {
         EmployeeEntity one = this.getById(employee.getId());
         if (one != null) {
             boolean update = updateById(employee);

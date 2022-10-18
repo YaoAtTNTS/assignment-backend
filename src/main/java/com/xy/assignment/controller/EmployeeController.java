@@ -34,7 +34,7 @@ public class EmployeeController {
 
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<Object> list(@RequestParam Map<String, Object> params) {
+    public ResponseEntity<Object> list(@RequestParam Map<String, String> params) {
 
         if (!params.containsKey("minSalary")) {
             return ResponseEntity.badRequest().body(JsonUtils.toJsonString("result", "Miss min salary param."));

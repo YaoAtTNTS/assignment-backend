@@ -16,7 +16,7 @@ import java.util.Map;
 
 
 public interface EmployeeService extends IService<EmployeeEntity> {
-    List<EmployeeEntity> queryAll(Map<String, Object> params);
+    List<EmployeeEntity> queryAll(Map<String, String> params);
 
     boolean checkLoginDuplicate(String id, String login);
 }
