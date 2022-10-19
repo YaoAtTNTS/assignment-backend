@@ -23,13 +23,15 @@ Open cmd, 'npm install -g @angular/cli'
 
 3. Run 'cd ./assignment-backend' to navigate to the project root dir.
 
-4. Run 'mvn clean package' 
+4. Open the file ./assignment-backend/src/resource/application.yml, change the username at line 8 and the password at line 9 into your own mysql client username and password.
 
-5. Run 'cd ./target' to navigate to the project jar package dir.
+5. Run 'mvn clean package' 
 
-6. Run 'java -jar assignment-1.0-SNAPSHOT' to start the application.
+6. Run 'cd ./target' to navigate to the project jar package dir.
 
-7. Keep the cmd program on.
+7. Run 'java -jar assignment-1.0-SNAPSHOT' to start the application.
+
+8. Keep the cmd program on.
 
 ## Create DB schema and table
 There are 2 ways.
