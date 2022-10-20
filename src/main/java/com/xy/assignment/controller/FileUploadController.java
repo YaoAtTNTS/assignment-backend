@@ -49,6 +49,9 @@ public class FileUploadController {
             String tempPath = tempDir + filename + UUID.randomUUID();
             File dir = new File(tempPath);
             String result = null;
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
             try {
                 file.transferTo(dir);
                 result = readCSVData(tempPath);
