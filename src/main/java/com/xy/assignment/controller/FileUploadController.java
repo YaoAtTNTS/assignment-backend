@@ -1,6 +1,5 @@
 package com.xy.assignment.controller;
 
-import com.opencsv.CSVReader;
 import com.xy.assignment.entity.EmployeeEntity;
 import com.xy.assignment.service.impl.EmployeeServiceImpl;
 import com.xy.assignment.utils.JsonUtils;
@@ -9,9 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
@@ -54,7 +52,7 @@ public class FileUploadController {
             }
             try {
                 file.transferTo(dir);
-                result = readCSVData(tempPath);
+                result = readCSVData(dir);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -75,53 +73,54 @@ public class FileUploadController {
 
     }
 
-    public String readCSVData (String tempPath) throws Exception {
-        FileReader reader = new FileReader(tempPath);
-        CSVReader csvReader = new CSVReader(reader);
-        csvReader.skip(1);
+    public String readCSVData(File file) throws Exception {
+        DataInputStream inputStream = new DataInputStream(new FileInputStream(file));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        String row;
+        reader.readLine();
         ArrayList<String> idList = new ArrayList<>();
         ArrayList<String> loginList = new ArrayList<>();
         ArrayList<EmployeeEntity> employeeList = new ArrayList<>();
-        String[] nextRow;
         int rowNo = 1;
-        while ((nextRow = csvReader.readNext()) != null) {
+        while ((row = reader.readLine()) != null) {
             rowNo++;
-            if (nextRow.length < 4) {
+            String[] rowItems = row.split(",");
+            if (rowItems.length < 4) {
                 return "Row 1 " + " has too few columns.";
             }
             for (int i = 0; i < 4; i++) {
-                if (nextRow[i].isEmpty()) {
+                if (rowItems[i].isEmpty()) {
                     return "Row " + rowNo + " has too few columns.";
                 }
             }
-            if (nextRow.length > 4) {
-                for (int i = 4; i < nextRow.length; i++) {
-                    if (!nextRow[i].isEmpty()) {
+            if (rowItems.length > 4) {
+                for (int i = 4; i < rowItems.length; i++) {
+                    if (!rowItems[i].isEmpty()) {
                         return "Row " + rowNo + " has too many columns.";
                     }
                 }
                 continue;
             }
-            if (nextRow[0].startsWith("#")) {
+            if (rowItems[0].startsWith("#")) {
                 continue;
             }
-            if (idList.contains(nextRow[0])) {
-                int i = idList.indexOf(nextRow[0]) + 2;
+            if (idList.contains(rowItems[0])) {
+                int i = idList.indexOf(rowItems[0]) + 2;
                 return "Row " + rowNo + " and Row " + i + " has duplicate employee IDs.";
             }
-            idList.add(nextRow[0]);
-            if (loginList.contains(nextRow[1])) {
-                int i = loginList.indexOf(nextRow[1]) + 2;
+            idList.add(rowItems[0]);
+            if (loginList.contains(rowItems[1])) {
+                int i = loginList.indexOf(rowItems[1]) + 2;
                 return "Row " + rowNo + " and Row " + i + " has duplicate employee logins.";
             }
-            if (employeeService.checkLoginDuplicate(nextRow[0], nextRow[1])) {
+            if (employeeService.checkLoginDuplicate(rowItems[0], rowItems[1])) {
                 return "Row " + rowNo + " has duplicate logins with an existing ID in the database.";
             }
-            loginList.add(nextRow[1]);
-            if (!isPositiveDouble(nextRow[3])) {
+            loginList.add(rowItems[1]);
+            if (!isPositiveDouble(rowItems[3])) {
                 return "Invalid salary in Row " + rowNo;
             }
-            employeeList.add(new EmployeeEntity(nextRow[0], nextRow[1], nextRow[2], Double.parseDouble(nextRow[3])));
+            employeeList.add(new EmployeeEntity(rowItems[0], rowItems[1], rowItems[2], Double.parseDouble(rowItems[3])));
         }
         if (rowNo <= 1) {
             return "Empty file";
